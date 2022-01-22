@@ -1,6 +1,13 @@
 """
 20220116 скрипт обращается к ранее созданным файлам с помощью new_super_script
 и создает в папке дня файл с отчетом по результатам выплаты купонов по облигациям
+
+если возникает ошибка
+Traceback (most recent call last):
+  File "/Volumes/big4photo/_PYTHON/Pandas/Invest/with_pandas/get_bonds_rezult.py", line 76, in <module>
+    tickers_data[7] = round(itog_df.ClearIncome.sum(), 2)
+TypeError: type str doesn't define __round__ method
+ то значит данный файл уже существует
 """
 
 from tf_invest_token import token_tf
@@ -34,13 +41,17 @@ def write_to_csv(filename_data, API_folder, tickers_data):  # запись в cs
 
 def ticker_report(my_ticker, bonds_df):  # результаты по тикеру из единного датафрэйма
     bonds_name = bonds_df[bonds_df.ticker == my_ticker].name.unique()[0]
-    buy = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "Buy"').payment.sum().round(2)
-    buy_card = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "BuyCard"').payment.sum().round(2)
-    tax_coupon = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "TaxCoupon"').payment.sum()
     coupon = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "Coupon"').payment.sum().round(2)
+    buy = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "Buy"').payment.sum().round(2)
     broker_commission = bonds_df[bonds_df.ticker == my_ticker].query(
         'operation_type == "BrokerCommission"').payment.sum().round(2)
+    part_repayment = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "PartRepayment"').payment.sum()
+    tax_coupon = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "TaxCoupon"').payment.sum()
+    sell = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "Sell"').payment.sum()
+    buy_card = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "BuyCard"').payment.sum().round(2)
+
     clear_income = round(coupon + broker_commission + tax_coupon + buy_card, 2)
+    final = coupon + buy + broker_commission + part_repayment + tax_coupon + sell + buy_card
 
     tickers_data = [bonds_name, my_ticker, coupon, buy, buy_card, tax_coupon, broker_commission, clear_income]
     write_to_csv(filename_data, API_folder, tickers_data)
@@ -52,7 +63,8 @@ def create_tickers_set(bonds_df):
 
 with open(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv',
           'a') as input_file:  # создаю csv  файл с заголовками таблицы
-    columns_names = ['Name', 'Tiker', 'Payed_Coupons', 'Buy', 'BuyCard', 'TaxCoupon', 'BrokerCommission', 'ClearIncome']
+    columns_names = ['Name', 'Tiсker', 'Coupon', 'Buy', 'BrokerCommission', 'PartRepayment', 'TaxCoupon', 'Sell',
+    'BuyCard', 'ClearIncome', 'Final']
     writer = csv.writer(input_file)
     writer.writerow(columns_names)
 
@@ -61,6 +73,8 @@ for account_name in account_id:
     df = pd.read_excel(f'{API_folder}/{filename_data}/bonds_on_{account_name}_{filename_data}.xlsx')
     bonds_df = bonds_df.append(df)
     all_tickers = create_tickers_set(bonds_df)  # вызываю функцию создающию коллекцию тикеров моих облигаций
+# print(bonds_df.operation_type.unique())  # список все возможных действий с бумагами
+
 
 for my_ticker in all_tickers:  # прохожусь циклом по коллекции тикеров и формирую отчет по каждому
     ticker_report(my_ticker, bonds_df)
