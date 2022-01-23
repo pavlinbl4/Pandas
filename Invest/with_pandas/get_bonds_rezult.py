@@ -51,9 +51,9 @@ def ticker_report(my_ticker, bonds_df):  # результаты по тикер�
     buy_card = bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "BuyCard"').payment.sum().round(2)
 
     clear_income = round(coupon + broker_commission + tax_coupon + buy_card, 2)
-    final = coupon + buy + broker_commission + part_repayment + tax_coupon + sell + buy_card
+    final = round(coupon + buy + broker_commission + part_repayment + tax_coupon + sell + buy_card, 2)
 
-    tickers_data = [bonds_name, my_ticker, coupon, buy, buy_card, tax_coupon, broker_commission, clear_income]
+    tickers_data = [bonds_name, my_ticker, coupon, buy, broker_commission, part_repayment, tax_coupon, sell, buy_card, clear_income ,final]
     write_to_csv(filename_data, API_folder, tickers_data)
 
 
@@ -84,8 +84,8 @@ for my_ticker in all_tickers:  # прохожусь циклом по колле
 itog_df = pd.read_csv(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv',
                       usecols=['ClearIncome'])  # считаю чистый доход по купонам
 
-tickers_data = [None] * 8
-tickers_data[7] = round(itog_df.ClearIncome.sum(), 2)
+tickers_data = [None] * 11
+tickers_data[9] = round(itog_df.ClearIncome.sum(), 2)
 write_to_csv(filename_data, API_folder, tickers_data)
 
 subprocess.call(['open', f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv'])
