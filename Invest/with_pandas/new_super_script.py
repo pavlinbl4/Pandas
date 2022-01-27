@@ -89,28 +89,17 @@ os.makedirs(f"/Volumes/big4photo/Documents/Инвестиции/API_data/{filena
 bonds = pd.read_excel('/Volumes/big4photo/Documents/Инвестиции/API_data/all_brokers_bonds.xlsx')
 bonds_name = bonds[['figi', 'name', 'ticker']]  # создаю датафрэйм с именами облигаций
 
-# for account_name in account_id:  # создаю csv файлы с данными по операциям на счетах
-#     pd.DataFrame([s.dict() for s in operations_response(today_data, account_id[account_name])]) \
-#         .to_csv(f'/Volumes/big4photo/Documents/Инвестиции/API_data/{filename_data}/operations_{account_name}_{filename_data}.csv')
-
-
-# данные по операциям из csv файлов
-# money_movings_broker = create_df_from_csv('broker')
-# money_movings_iis = create_df_from_csv('iis')
-
-# bonds = pd.read_excel('/Volumes/big4photo/Documents/Инвестиции/API_data/all_brokers_bonds.xlsx')
-# bonds_name = bonds[['figi', 'name', 'ticker']]  # создаю датафрэйм с именами облигаций
 
 for account_name in account_id:
     pd.DataFrame([s.dict() for s in operations_response(today_data, account_id[account_name])]) \
         .to_csv(
-        f'/Volumes/big4photo/Documents/Инвестиции/API_data/{filename_data}/operations_{account_name}_{filename_data}.csv')
+        f'/Volumes/big4photo/Documents/Инвестиции/API_data/{filename_data}/operations_{account_name}_{filename_data}.csv') # сохраняю данные по операциям в файл
 
     file = f'/Volumes/big4photo/Documents/Инвестиции/API_data/{filename_data}/operations_{account_name}_{filename_data}.csv'
     df = pd.read_csv(file)
 
     only_real_bonds = df.query('instrument_type == "Bond" and  status == "Done"') \
-        [['figi', 'operation_type', 'payment', 'quantity']]  # датафрэйм с куплеными облигациями
+        [['figi', 'operation_type', 'payment', 'quantity']]  # датафрэйм с куплеными облигациями есть предположение , что quantity на до заменить на quantity_executed
 
     real_bonds_with_name = bonds_name.merge(only_real_bonds, on='figi')[
         ['name', 'ticker', 'figi', 'operation_type', 'payment', 'quantity']]
