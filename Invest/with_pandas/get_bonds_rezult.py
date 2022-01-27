@@ -32,6 +32,9 @@ account_id = {'iis': int(df.broker_account_id[1]), 'broker': int(df.broker_accou
 
 bonds_df = pd.DataFrame()  # создаю пустой единый датафрэйм
 
+columns_names = ['Name', 'Tiсker', 'Quantity', 'Coupon', 'Buy', 'BrokerCommission', 'PartRepayment', 'TaxCoupon', 'Sell',
+                         'BuyCard', 'ClearIncome', 'Final','Min_sale_price']
+
 
 def write_to_csv(filename_data, API_folder, tickers_data):  # запись в csv файл данных по каждому тикеру
     with open(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv', 'a') as input_file:
@@ -52,8 +55,22 @@ def ticker_report(my_ticker, bonds_df):  # результаты по тикер�
 
     clear_income = round(coupon + broker_commission + tax_coupon + buy_card, 2)
     final = round(coupon + buy + broker_commission + part_repayment + tax_coupon + sell + buy_card, 2)
+    # print(bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "Buy"'))
 
-    tickers_data = [bonds_name, my_ticker, coupon, buy, broker_commission, part_repayment, tax_coupon, sell, buy_card, clear_income ,final]
+
+
+    bonds_quantity = bonds_df.query('quantity > 0') \
+        .groupby('ticker', as_index=False).sum() \
+        .query("ticker == @my_ticker") \
+        .quantity \
+        .values[0]                      # количество купленных облигций
+
+    min_sale_price = round(abs(final + broker_commission) / bonds_quantity, 3) # минимальная цена продажи бумаги
+
+
+
+    tickers_data = [bonds_name, my_ticker,bonds_quantity, coupon, buy, broker_commission, part_repayment, tax_coupon, sell, buy_card,
+                    clear_income, final, min_sale_price]
     write_to_csv(filename_data, API_folder, tickers_data)
 
 
@@ -61,31 +78,42 @@ def create_tickers_set(bonds_df):
     return set(bonds_df.ticker.unique())  # список тикеров облигаций
 
 
-with open(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv',
-          'a') as input_file:  # создаю csv  файл с заголовками таблицы
-    columns_names = ['Name', 'Tiсker', 'Coupon', 'Buy', 'BrokerCommission', 'PartRepayment', 'TaxCoupon', 'Sell',
-    'BuyCard', 'ClearIncome', 'Final']
-    writer = csv.writer(input_file)
-    writer.writerow(columns_names)
+def create_file(API_folder,filename_data,columns_names):# создаю csv файл с заголовками таблицы
+    with open(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv',
+              'w') as input_file:
+        writer = csv.writer(input_file)
+        writer.writerow(columns_names)
+
+create_file(API_folder,filename_data,columns_names)
 
 for account_name in account_id:
     # по каждому аккаунту считываю файл сегодняшнего дня по облигациям и создаю единный датафрэйм
     df = pd.read_excel(f'{API_folder}/{filename_data}/bonds_on_{account_name}_{filename_data}.xlsx')
     bonds_df = bonds_df.append(df)
-    all_tickers = create_tickers_set(bonds_df)  # вызываю функцию создающию коллекцию тикеров моих облигаций
-# print(bonds_df.operation_type.unique())  # список все возможных действий с бумагами
 
+    all_tickers = create_tickers_set(bonds_df)  # вызываю функцию создающию коллекцию тикеров моих облигаций
+print(bonds_df.columns)
 
 for my_ticker in all_tickers:  # прохожусь циклом по коллекции тикеров и формирую отчет по каждому
     ticker_report(my_ticker, bonds_df)
 
+itog_df = pd.read_csv(
+    f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv')  # cчитываю датафрэйм из созданной таблицы
+
+# itog_df = itog_df.sort_values(by=['Buy'])
+# print(itog_df)
+
+# itog_df.to_csv(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv')
 
 
-itog_df = pd.read_csv(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv',
-                      usecols=['ClearIncome'])  # считаю чистый доход по купонам
 
-tickers_data = [None] * 11
-tickers_data[9] = round(itog_df.ClearIncome.sum(), 2)
+tickers_data = [None] * len(columns_names)
+
+for i in range(3,len(columns_names)):
+    tickers_data[i] = itog_df[columns_names[i]].sum().round(2)
+
 write_to_csv(filename_data, API_folder, tickers_data)
+
+
 
 subprocess.call(['open', f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv'])
