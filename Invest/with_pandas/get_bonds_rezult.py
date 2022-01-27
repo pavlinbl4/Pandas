@@ -32,8 +32,9 @@ account_id = {'iis': int(df.broker_account_id[1]), 'broker': int(df.broker_accou
 
 bonds_df = pd.DataFrame()  # создаю пустой единый датафрэйм
 
-columns_names = ['Name', 'Tiсker', 'Quantity', 'Coupon', 'Buy', 'BrokerCommission', 'PartRepayment', 'TaxCoupon', 'Sell',
-                         'BuyCard', 'ClearIncome', 'Final','Min_sale_price']
+columns_names = ['Name', 'Tiсker', 'Quantity', 'Coupon', 'Buy', 'BrokerCommission', 'PartRepayment', 'TaxCoupon',
+                 'Sell',
+                 'BuyCard', 'ClearIncome', 'Final', 'Min_sale_price']
 
 
 def write_to_csv(filename_data, API_folder, tickers_data):  # запись в csv файл данных по каждому тикеру
@@ -55,21 +56,17 @@ def ticker_report(my_ticker, bonds_df):  # результаты по тикер�
 
     clear_income = round(coupon + broker_commission + tax_coupon + buy_card, 2)
     final = round(coupon + buy + broker_commission + part_repayment + tax_coupon + sell + buy_card, 2)
-    # print(bonds_df[bonds_df.ticker == my_ticker].query('operation_type == "Buy"'))
 
-
-
-    bonds_quantity = bonds_df.query('quantity > 0') \
+    bonds_quantity = bonds_df.query('quantity_executed > 0') \
         .groupby('ticker', as_index=False).sum() \
         .query("ticker == @my_ticker") \
-        .quantity \
-        .values[0]                      # количество купленных облигций
+        .quantity_executed \
+        .values[0]  # количество купленных облигций
 
-    min_sale_price = round(abs(final + broker_commission) / bonds_quantity, 3) # минимальная цена продажи бумаги
+    min_sale_price = round(abs(final + broker_commission) / bonds_quantity, 3)  # минимальная цена продажи бумаги
 
-
-
-    tickers_data = [bonds_name, my_ticker,bonds_quantity, coupon, buy, broker_commission, part_repayment, tax_coupon, sell, buy_card,
+    tickers_data = [bonds_name, my_ticker, bonds_quantity, coupon, buy, broker_commission, part_repayment, tax_coupon,
+                    sell, buy_card,
                     clear_income, final, min_sale_price]
     write_to_csv(filename_data, API_folder, tickers_data)
 
@@ -78,13 +75,14 @@ def create_tickers_set(bonds_df):
     return set(bonds_df.ticker.unique())  # список тикеров облигаций
 
 
-def create_file(API_folder,filename_data,columns_names):# создаю csv файл с заголовками таблицы
+def create_file(API_folder, filename_data, columns_names):  # создаю csv файл с заголовками таблицы
     with open(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv',
               'w') as input_file:
         writer = csv.writer(input_file)
         writer.writerow(columns_names)
 
-create_file(API_folder,filename_data,columns_names)
+
+create_file(API_folder, filename_data, columns_names)
 
 for account_name in account_id:
     # по каждому аккаунту считываю файл сегодняшнего дня по облигациям и создаю единный датафрэйм
@@ -100,20 +98,15 @@ for my_ticker in all_tickers:  # прохожусь циклом по колле
 itog_df = pd.read_csv(
     f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv')  # cчитываю датафрэйм из созданной таблицы
 
-# itog_df = itog_df.sort_values(by=['Buy'])
-# print(itog_df)
-
-# itog_df.to_csv(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv')
-
-
+itog_df = itog_df.sort_values(
+    by=['Buy'])  # считываю информацию из файли и сортирую ее по величине покупки, перезаписываю файл
+itog_df.to_csv(f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv', index=False)
 
 tickers_data = [None] * len(columns_names)
 
-for i in range(3,len(columns_names)):
+for i in range(2, len(columns_names)):
     tickers_data[i] = itog_df[columns_names[i]].sum().round(2)
 
 write_to_csv(filename_data, API_folder, tickers_data)
-
-
 
 subprocess.call(['open', f'{API_folder}/{filename_data}/bonds_rezult_{filename_data}.csv'])
