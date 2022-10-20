@@ -2,33 +2,34 @@
 20220116 скрипт обращается к ранее созданным файлам с помощью new_super_script
 и создает в папке дня файл с отчетом по результатам выплаты купонов по облигациям
 
-если возникает ошибка
-Traceback (most recent call last):
-  File "/Volumes/big4photo/_PYTHON/Pandas/Invest/with_pandas/get_bonds_rezult.py", line 76, in <module>
-    tickers_data[7] = round(itog_df.ClearIncome.sum(), 2)
-TypeError: type str doesn't define __round__ method
- то значит данный файл уже существует
 """
 
-from tf_invest_token import token_tf
+
 import pandas as pd
 import datetime
 import tinvest
 import csv
 import subprocess
+from dotenv import load_dotenv
+import ast
+import os
+
+load_dotenv()
+TOKEN = os.environ.get('token_tf')
+account_id = ast.literal_eval(os.environ.get('account_id'))
 
 today_data = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
 filename_data = datetime.date.today()
 API_folder = '/Volumes/big4photo/Documents/Инвестиции/API_data'
 
-TOKEN = token_tf
-client = tinvest.SyncClient(TOKEN)
+# TOKEN = token_tf
+# client = tinvest.SyncClient(TOKEN)
 
 client = tinvest.SyncClient(TOKEN)
 
 accounts_info = client.get_accounts().payload.accounts  # получаю данные по аккаунта
 df = pd.DataFrame([s.dict() for s in accounts_info])  # датафрэйм с данными аккаунта
-account_id = {'iis': int(df.broker_account_id[1]), 'broker': int(df.broker_account_id[0])}  # словарь с данными аккаунта
+# account_id = {'iis': int(df.broker_account_id[1]), 'broker': int(df.broker_account_id[0])}  # словарь с данными аккаунта
 
 bonds_df = pd.DataFrame()  # создаю пустой единый датафрэйм
 
