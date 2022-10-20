@@ -7,12 +7,12 @@ import ast
 load_dotenv()
 TOKEN = os.environ.get('token_tf')
 
-accounts_id = ast.literal_eval(os.environ.get('account_id'))
+account_id = ast.literal_eval(os.environ.get('account_id'))
 
 client = tinvest.SyncClient(TOKEN)
 
-print(type(accounts_id))
-response = client.get_portfolio(broker_account_id=accounts_id['iis']).payload  # получаю портфолио по аккаунту
+
+response = client.get_portfolio(broker_account_id=account_id['iis']).payload  # получаю портфолио по аккаунту
 
 # Получение инструмента по FIGI
 response = client.get_market_search_by_figi('BBG000BL8476').payload
