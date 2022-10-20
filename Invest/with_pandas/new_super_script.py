@@ -6,26 +6,25 @@
 import tinvest
 import pandas as pd
 import datetime
-import os
 import subprocess
 import csv
-# from os import getenv
-from sys import exit
-from tf_invest_token import token_tf
+from dotenv import load_dotenv
+import ast
+import os
+
+load_dotenv()
+TOKEN = os.environ.get('token_tf')
+account_id = ast.literal_eval(os.environ.get('account_id'))
 
 today_data = datetime.datetime.now().astimezone().replace(microsecond=0).isoformat()
 filename_data = datetime.date.today()
 
-# token_tf = getenv("TF_TOKEN")  # получаю токен из Environment Variables
-# if not token_tf:
-#     exit("Error: no token provided")
 
-TOKEN = token_tf
 client = tinvest.SyncClient(TOKEN)
 
 accounts_info = client.get_accounts().payload.accounts  # получаю данные по аккаунта
 df = pd.DataFrame([s.dict() for s in accounts_info])  # датафрэйм с данными аккаунта
-account_id = {'iis': int(df.broker_account_id[1]), 'broker': int(df.broker_account_id[0])}  # словарь с данными аккаунта
+
 
 csv_file_path = '/Volumes/big4photo/Documents/Инвестиции'  # для модуля по денежным  остаткам
 file_name = "Валюта_на_счете"  # для модуля по денежным  остаткам
@@ -99,10 +98,10 @@ for account_name in account_id:
     df = pd.read_csv(file)
 
     only_real_bonds = df.query('instrument_type == "Bond" and  status == "Done"') \
-        [['figi', 'operation_type', 'payment', 'quantity']]  # датафрэйм с куплеными облигациями есть предположение , что quantity на до заменить на quantity_executed
+        [['figi', 'operation_type', 'payment', 'quantity_executed']]  # датафрэйм с куплеными облигациями есть предположение , что quantity на до заменить на quantity_executed
 
     real_bonds_with_name = bonds_name.merge(only_real_bonds, on='figi')[
-        ['name', 'ticker', 'figi', 'operation_type', 'payment', 'quantity']]
+        ['name', 'ticker', 'figi', 'operation_type', 'payment', 'quantity_executed']]
     # датафрэйм со всей необхоимой информацией об облигациях и именами
 
     real_bonds_with_name.to_excel(
