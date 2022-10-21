@@ -22,8 +22,6 @@ today_data = datetime.datetime.now().astimezone().replace(microsecond=0).isoform
 filename_data = datetime.date.today()
 API_folder = '/Volumes/big4photo/Documents/Инвестиции/API_data'
 
-# TOKEN = token_tf
-# client = tinvest.SyncClient(TOKEN)
 
 client = tinvest.SyncClient(TOKEN)
 
