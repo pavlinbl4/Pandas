@@ -2,8 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-
-icloud_folder = Path().home() / 'Library/Mobile Documents/com~apple~CloudDocs/'
+icloud_folder = Path().home() / 'Library/Mobile Documents/com~apple~CloudDocs/Documents'
 # Read the Excel file
 excel_file = pd.ExcelFile(f'{icloud_folder}/TASS/all_years_report.xlsx')
 # excel_file = pd.ExcelFile('files_/dataframe_test.xlsx')
