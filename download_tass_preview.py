@@ -13,7 +13,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-from must_have.crome_options import setting_chrome_options
+from crome_options import setting_chrome_options
 
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=setting_chrome_options())

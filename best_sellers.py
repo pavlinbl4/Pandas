@@ -4,6 +4,7 @@
 и выводит лучший снимок и лучшего покупателя
 """
 from pathlib import Path
+from tkinter import filedialog
 
 import pandas as pd
 from colorama import Fore, init, Style
@@ -139,11 +140,12 @@ def main(path_to_report_xlsx_file_):
 
 if __name__ == '__main__':
 
-    icloud_folder = Path().home() / 'Library/Mobile Documents/com~apple~CloudDocs/'
+    # icloud_folder = Path().home() / 'Library/Mobile Documents/com~apple~CloudDocs/Documents'
+    #
+    # for report_xlsx_file in (Path().home() / f'{icloud_folder}/TASS/original_reports/').iterdir():
+    #     if Path(report_xlsx_file).suffix == '.xlsx':
+    #
+    #         main(report_xlsx_file)
 
-    for report_xlsx_file in (Path().home() / f'{icloud_folder}/TASS/original_reports/').iterdir():
-        if Path(report_xlsx_file).suffix == '.xlsx':
-
-            main(report_xlsx_file)
-    # path_to_report_xlsx_file = filedialog.askopenfile().name
-    # main(path_to_report_xlsx_file)
+    path_to_report_xlsx_file = filedialog.askopenfile().name
+    main(path_to_report_xlsx_file)
