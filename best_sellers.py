@@ -8,8 +8,12 @@ from tkinter import filedialog
 
 import pandas as pd
 from colorama import Fore, init, Style
+from loguru import logger
 
 from download_tass_preview import download_photo_preview_by_id
+
+icloud_folder = Path().home() / 'Library/Mobile Documents/com~apple~CloudDocs/Documents'
+
 
 init()
 # преобразование таблицы отчета в датафрейм с удалением ненужной информации
@@ -29,6 +33,7 @@ def read_table_from_excel(file_path: str) -> object:
 
     # Находим индекс последней строки
     end_index = df.index[df[0] == 'Итого доход от использования фотоснимков:'][0] - 1
+    logger.debug(f'{end_index = }')
 
     # Читаем только нужные строки
     df = xl.parse(0, header=start_index - 1, nrows=end_index - start_index + 1)
@@ -107,7 +112,7 @@ def expensive_image(df):
 
 
 def main(path_to_report_xlsx_file_):
-    # преобразую xlsx файл в рабочий датафрейм
+    # преобразую xlsx файл в рабочий дата фрейм
     df, period = read_table_from_excel(path_to_report_xlsx_file_)
 
     best_photo_id_, sold_count_for_best_image_, max_sale_income_ = (
@@ -131,10 +136,10 @@ def main(path_to_report_xlsx_file_):
           f" куплен за  {expensive_image_income}\n"
           )
 
-    download_photo_preview_by_id(expensive_image_id, 'Expensive_image',
+    download_photo_preview_by_id(expensive_image_id, f'{icloud_folder}/TASS/Expensive_image',
                                  image_file_name=f'{period}_Expensive_image_{expensive_image_id}_sold_price-{expensive_image_income}.JPG')
 
-    download_photo_preview_by_id(best_photo_id_, 'Best_sellers',
+    download_photo_preview_by_id(best_photo_id_, f'{icloud_folder}/TASS/Best_sellers',
                                  image_file_name=f'{period}_Best_photo_{best_photo_id_}_sold_price-{max_sale_income_}.JPG')
 
 
